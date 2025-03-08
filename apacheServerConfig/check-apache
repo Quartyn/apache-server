@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "Checking virtual hosts. If there are none, apache will be stoppped."
+
+# Check for active virtual hosts
+VHOSTS=$(sudo apache2ctl -S | grep 'port' | wc -l)
+
+if [ "$VHOSTS" -eq 0 ]; then
+    echo "No virtual hosts found. Stopping Apache service."
+    sudo systemctl stop apache2
+else
+    echo "$VHOSTS virtual host(s) found. Apache service will continue running."
+fi

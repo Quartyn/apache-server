@@ -1,0 +1,72 @@
+#!/bin/bash
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+# Trap function to handle Ctrl+C and cleanup
+cleanup() {
+    echo -e "\nCleaning up..."
+    # Remove the symlink
+    if [ -L "/etc/apache2/sites-available/current-dir.conf" ]; then
+        sudo unlink "/etc/apache2/sites-available/current-dir.conf"
+    fi
+    
+    # Disable the site configuration
+    sudo a2dissite current-dir.conf > /dev/null 2>&1
+    
+    # Reload Apache to apply changes
+    echo "Reloading Apache..."
+    sudo systemctl reload apache2 || echo "Apache reload failed, but cleanup completed"
+    
+    # Remove configuration file
+    sudo rm -f "/etc/apache2/sites-available/current-dir.conf"
+
+    # Stop apache server if no hosts are found.
+    "$SCRIPT_DIR/check-apache"
+    
+    echo "Cleanup complete. Exiting..."
+    exit 0
+}
+
+# Set up trap for Ctrl+C
+trap cleanup SIGINT
+
+# Get current directory
+CURRENT_DIR=$(pwd)
+PORT=80
+
+# Create dynamic configuration
+sudo cat > /tmp/current-dir.conf <<EOF
+<VirtualHost *:$PORT>
+    DocumentRoot $CURRENT_DIR
+    <Directory $CURRENT_DIR>
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+EOF
+
+# Copy the configuration to the apache directory
+sudo cp /tmp/current-dir.conf /etc/apache2/sites-available/current-dir.conf
+rm -f /tmp/current-dir.conf
+
+# Check if the apache instance is running. If not, start it.
+if ! systemctl is-active --quiet apache2; then
+    echo "apache2 is not running. Enabling the process.."
+    sudo systemctl start apache2
+fi
+
+
+# Enable site and reload Apache
+sudo a2ensite current-dir.conf || echo "Site already enabled"
+sudo systemctl reload apache2
+
+URL=http://localhost:$PORT
+
+if [ $PORT == 80 ] || [ $PORT = 443 ]; then
+    URL=http://localhost
+fi
+echo "Apache configured to serve from $CURRENT_DIR"
+echo "Access your files at $URL"
+
+# Wait until Ctrl+C
+read -r -p "Press Ctrl+C to stop the server... " _
