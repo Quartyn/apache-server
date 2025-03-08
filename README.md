@@ -20,6 +20,10 @@ Clone this repo to your system.
 ```zsh
 git clone https://github.com/Quartyn/apache-server
 ```
+Enter cloned directory
+```zsh
+cd apache-server
+```
 Move the `apacheServerConfig` directory into the `/usr/local/bin` or `/usr/bin` directory (Your choice. I recommend `/usr/local/bin`).
 ```zsh
 sudo mv apacheServerConfig /usr/local/bin
@@ -28,6 +32,7 @@ After it's done, you will create a new symbolic link to the `apacheServerConfig/
 ```zsh
 sudo ln -s /usr/local/bin/apacheServerConfig/run-server /usr/local/bin/apache-server
 ```
+Optional:   
 Here, you can also rename the symbolic link `apache-server` with your preferred command name. Then, you will be able to start this command with your "own name".
 
 For example, if you decide your symbolic link to be `run-server`, you will then start the server with command
@@ -35,4 +40,4 @@ For example, if you decide your symbolic link to be `run-server`, you will then 
 run-server
 ```
 
-And that's all! Enjoy.
+And that's all! Enjoy. Now you can [run a server](#how-to-run-a-server).
